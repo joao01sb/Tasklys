@@ -19,8 +19,12 @@ class FakeNoteRepository : NoteRepository {
 
     override suspend fun updateNote(note: Note) {
         val list = notesFlow.value.toMutableList()
-        list[list.indexOfFirst { it.id == note.id }] = note
-        notesFlow.value = list
+        val existingIndex = list.indexOfFirst { it.id == note.id }
+
+        if (existingIndex != -1) {
+            list[existingIndex] = note
+            notesFlow.value = list
+        }
     }
 
     override suspend fun deleteNote(note: Note) {
