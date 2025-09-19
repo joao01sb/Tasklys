@@ -13,7 +13,9 @@ ksp = "2.1.21-2.0.1"
 coroutinesTest = "1.10.2"
 
 [libraries]
+androidx-compose-material3-window-size-class1 = { module = "androidx.compose.material3:material3-window-size-class" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-material3 = { module = "androidx.compose.material3:material3" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
