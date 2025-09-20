@@ -11,44 +11,28 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
-)
-
 @Composable
 fun TasklysTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
 
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    val colorScheme = lightColorScheme(
+        primary = com.joao01sb.tasklys.ui.theme.Primary,
+        onPrimary = com.joao01sb.tasklys.ui.theme.OnPrimary,
+        secondary = com.joao01sb.tasklys.ui.theme.Secondary,
+        onSecondary = com.joao01sb.tasklys.ui.theme.OnSecondary,
+        background = com.joao01sb.tasklys.ui.theme.Background,
+        onBackground = com.joao01sb.tasklys.ui.theme.OnSurface,
+        surface = com.joao01sb.tasklys.ui.theme.Surface,
+        onSurface = com.joao01sb.tasklys.ui.theme.OnSurface,
+        surfaceVariant = com.joao01sb.tasklys.ui.theme.SurfaceVariant,
+        onSurfaceVariant = com.joao01sb.tasklys.ui.theme.OnSurfaceVariant,
+        outline = com.joao01sb.tasklys.ui.theme.Outline,
+        outlineVariant = com.joao01sb.tasklys.ui.theme.OutlineVariant,
+        error = com.joao01sb.tasklys.ui.theme.Error
+    )
 
     MaterialTheme(
         colorScheme = colorScheme,
