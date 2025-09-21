@@ -79,7 +79,7 @@ import com.joao01sb.tasklys.ui.theme.Surface
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoteListScreen(
-    state: NoteState<List<Note>>,
+    state: NoteUiState<List<Note>>,
     searchQuery: String,
     selectedFilter: NoteFilter,
     onSearchQueryChange: (String) -> Unit,
@@ -149,29 +149,24 @@ fun NoteListScreen(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
 
-        when (state) {
-            is NoteState.Error -> {
+        when {
+            state.isLoading -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = state.message,
-                        color = OnSurfaceVariant
-                    )
+                    CircularProgressIndicator(color = Primary)
                 }
             }
-            is NoteState.Loading -> {
+            !state.error.isNullOrEmpty() -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(
-                        color = Primary
-                    )
+                    Text(text = state.error, color = OnSurfaceVariant)
                 }
             }
-            is NoteState.Success<*> -> {
+            !state.data.isNullOrEmpty() -> {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -180,7 +175,7 @@ fun NoteListScreen(
                     contentPadding = PaddingValues(vertical = 16.dp)
                 ) {
                     items(
-                        items = state.value as List<Note>,
+                        items = state.data,
                         key = { it.id }
                     ) { note ->
                         NoteCard(
@@ -191,6 +186,14 @@ fun NoteListScreen(
                             modifier = Modifier
                         )
                     }
+                }
+            }
+            else -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "Not found notes", color = OnSurfaceVariant)
                 }
             }
         }
@@ -219,7 +222,7 @@ fun NoteListScreen(
 @Composable
 fun NoteListScreenPreview() {
     NoteListScreen(
-        state = NoteState.Success(MockData.mockNotes),
+        state = NoteUiState(data = MockData.mockNotes),
         searchQuery = "",
         selectedFilter = NoteFilter.ALL,
         onSearchQueryChange = {},
