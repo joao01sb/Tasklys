@@ -40,7 +40,7 @@ object MockData {
             content = "30 minutos de caminhada no parque e alongamentos",
             createdAt = currentTime - (3 * 24 * 60 * 60 * 1000),
             expiresAt = null,
-            status = NoteStatus.ARCHIVED
+            status = NoteStatus.COMPLETED
         ),
         
         Note(

@@ -12,5 +12,5 @@ data class Note(
 enum class NoteStatus {
     ACTIVE,
     EXPIRED,
-    ARCHIVED
+    COMPLETED
 }

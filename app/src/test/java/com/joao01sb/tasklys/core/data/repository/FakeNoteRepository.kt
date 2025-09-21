@@ -42,4 +42,9 @@ class FakeNoteRepository : NoteRepository {
     }
 
     override fun getNotes(): Flow<List<Note>> = notesFlow.map { it.toList() }
+
+    override suspend fun getNotesByFilter(query: String): List<Note>? {
+        return notesFlow.value.filter { it.title.contains(query) || it.content.contains(query) }
+    }
+
 }

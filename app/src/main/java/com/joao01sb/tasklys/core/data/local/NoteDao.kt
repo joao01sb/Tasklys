@@ -28,4 +28,8 @@ interface NoteDao {
 
     @Query("DELETE FROM notes")
     suspend fun deleteAll()
+
+    @Query("SELECT * FROM notes WHERE title LIKE '%' || :query || '%' OR content LIKE '%' || :query || '%'")
+    suspend fun getNotesByFilter(query: String) : List<NoteEntity>?
+
 }

@@ -10,4 +10,5 @@ interface NoteRepository {
     suspend fun getNoteById(id: Long): Note?
     suspend fun deleteAllNotes()
     fun getNotes(): Flow<List<Note>>
+    suspend fun getNotesByFilter(query: String) : List<Note>?
 }

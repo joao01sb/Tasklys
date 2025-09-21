@@ -28,4 +28,9 @@ class NoteRepositoryImp(
         }
     }
 
+    override suspend fun getNotesByFilter(query: String): List<Note>? {
+        return noteDao.getNotesByFilter(query)
+            ?.map { it.toDomain() }
+    }
+
 }

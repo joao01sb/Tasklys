@@ -309,7 +309,7 @@ private fun NoteCard(
     modifier: Modifier = Modifier
 ) {
     val isExpired = note.expiresAt?.let { it < System.currentTimeMillis() } == true
-    val isCompleted = note.status == NoteStatus.ARCHIVED
+    val isCompleted = note.status == NoteStatus.COMPLETED
 
     Card(
         modifier = modifier
