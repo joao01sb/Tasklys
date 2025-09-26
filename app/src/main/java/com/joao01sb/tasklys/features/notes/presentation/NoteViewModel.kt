@@ -1,8 +1,12 @@
 package com.joao01sb.tasklys.features.notes.presentation
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.joao01sb.tasklys.core.domain.model.Note
+import com.joao01sb.tasklys.core.domain.model.NoteFilter
 import com.joao01sb.tasklys.core.domain.usecase.AddNote
 import com.joao01sb.tasklys.core.domain.usecase.AllNotes
 import com.joao01sb.tasklys.core.domain.usecase.DeleteAllNotes
@@ -34,10 +38,38 @@ class NoteViewModel(
     private val _uiEvent = MutableSharedFlow<NoteUiEvent>()
     val uiEvent: SharedFlow<NoteUiEvent> = _uiEvent.asSharedFlow()
 
+    var currentScreen by mutableStateOf(NoteScreen.LIST)
+        private set
+    var selectedNoteId by mutableStateOf<Long?>(null)
+        private set
+
+    var currentQuery by mutableStateOf("")
+        private set
+    var selectedFilter by mutableStateOf(NoteFilter.ALL)
+        private set
+
     private lateinit var currentNote: Note
 
     init {
         allNotes()
+    }
+
+    fun onQueryChange(query: String) {
+        currentQuery = query
+    }
+
+    fun setSelectedFilter(filter: NoteFilter) {
+        selectedFilter = filter
+    }
+
+    fun navigateToDetail(noteId: Long? = null) {
+        selectedNoteId = noteId
+        currentScreen = NoteScreen.DETAIL
+    }
+
+    fun navigateBackToList() {
+        selectedNoteId = null
+        currentScreen = NoteScreen.LIST
     }
 
     fun allNotes() {
