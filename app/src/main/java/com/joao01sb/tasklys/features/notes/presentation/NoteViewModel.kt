@@ -58,7 +58,7 @@ class NoteViewModel(
         currentQuery = query
     }
 
-    fun setSelectedFilter(filter: NoteFilter) {
+    fun updateSelectedFilter(filter: NoteFilter) {
         selectedFilter = filter
     }
 
