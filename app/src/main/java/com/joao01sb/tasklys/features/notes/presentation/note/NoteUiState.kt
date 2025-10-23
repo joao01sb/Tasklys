@@ -1,4 +1,4 @@
-package com.joao01sb.tasklys.features.notes.presentation
+package com.joao01sb.tasklys.features.notes.presentation.note
 
 data class NoteUiState<T>(
     val isLoading: Boolean = false,

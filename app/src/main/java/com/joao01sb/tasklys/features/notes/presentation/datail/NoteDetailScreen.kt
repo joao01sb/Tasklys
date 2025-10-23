@@ -1,8 +1,10 @@
-package com.joao01sb.tasklys.features.notes.presentation
+package com.joao01sb.tasklys.features.notes.presentation.datail
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -293,7 +295,7 @@ fun NoteDetailsScreen(
                             containerColor = SurfaceVariant
                         ),
                         shape = RoundedCornerShape(16.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Outline)
+                        border = BorderStroke(1.dp, Outline)
                     ) {
                         Text(
                             text = detailUiState.content,
@@ -367,7 +369,7 @@ private fun StatusIndicator(
             }
         ),
         shape = RoundedCornerShape(16.dp),
-        border = androidx.compose.foundation.BorderStroke(
+        border = BorderStroke(
             1.dp,
             when {
                 isCompleted -> Success.copy(alpha = 0.3f)
@@ -393,7 +395,7 @@ private fun StatusIndicator(
                                 isExpired -> Error
                                 else -> OnBackground
                             },
-                            shape = androidx.compose.foundation.shape.CircleShape
+                            shape = CircleShape
                         )
                 )
                 Text(
@@ -447,7 +449,7 @@ private fun ExpiryDateSection(
             containerColor = SurfaceVariant
         ),
         shape = RoundedCornerShape(16.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Outline)
+        border = BorderStroke(1.dp, Outline)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -530,7 +532,7 @@ private fun ExpiryDateSection(
                         contentColor = OnSurfaceVariant
                     ),
                     shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Outline),
+                    border = BorderStroke(1.dp, Outline),
                     contentPadding = PaddingValues(vertical = 12.dp)
                 ) {
                     Icon(

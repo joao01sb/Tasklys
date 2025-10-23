@@ -1,4 +1,4 @@
-package com.joao01sb.tasklys.features.notes.presentation
+package com.joao01sb.tasklys.features.notes.presentation.datail
 
 import com.joao01sb.tasklys.core.domain.model.Note
 

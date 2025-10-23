@@ -1,4 +1,4 @@
-package com.joao01sb.tasklys.features.notes.presentation
+package com.joao01sb.tasklys.features.notes.presentation.note
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn

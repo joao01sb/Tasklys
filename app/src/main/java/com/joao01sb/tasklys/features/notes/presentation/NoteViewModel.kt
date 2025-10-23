@@ -15,12 +15,19 @@ import com.joao01sb.tasklys.core.domain.usecase.DeleteNote
 import com.joao01sb.tasklys.core.domain.usecase.GetNoteById
 import com.joao01sb.tasklys.core.domain.usecase.GetNotesByFilter
 import com.joao01sb.tasklys.core.domain.usecase.UpdateNote
+import com.joao01sb.tasklys.features.notes.presentation.datail.NoteDetailUiState
+import com.joao01sb.tasklys.features.notes.presentation.note.NoteUiState
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class NoteViewModel(
@@ -29,12 +36,8 @@ class NoteViewModel(
     private val deleteAllNotes: DeleteAllNotes,
     private val deleteNote: DeleteNote,
     private val getNoteById: GetNoteById,
-    private val updateNote: UpdateNote,
-    private val getNotesByFilter: GetNotesByFilter
+    private val updateNote: UpdateNote
 ) : ViewModel() {
-
-    private val _uiState = MutableStateFlow(NoteUiState<List<Note>>())
-    val uiState: StateFlow<NoteUiState<List<Note>>> = _uiState
 
     private val _detailUiState = MutableStateFlow(NoteDetailUiState())
     val detailUiState: StateFlow<NoteDetailUiState> = _detailUiState
@@ -48,19 +51,59 @@ class NoteViewModel(
     var currentQuery by mutableStateOf("")
         private set
 
-    var selectedFilter by mutableStateOf(NoteFilter.ALL)
-        private set
+    private val _selectedFilter = MutableStateFlow(NoteFilter.ALL)
+    val selectedFilter: StateFlow<NoteFilter> = _selectedFilter.asStateFlow()
 
-    init {
-        loadAllNotes()
-    }
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
-    fun onQueryChange(query: String) {
-        currentQuery = query
-    }
+    val uiState: StateFlow<NoteUiState<List<Note>>> = combine(
+        allNotes.invoke(),
+        selectedFilter,
+        searchQuery
+    ) { notes, filter, query ->
+
+        val searchFiltered = if (query.isBlank()) {
+            notes
+        } else {
+            notes.filter { note ->
+                note.title.contains(query, ignoreCase = true) ||
+                        note.content.contains(query, ignoreCase = true)
+            }
+        }
+
+        val finalFiltered = when (filter) {
+            NoteFilter.ALL -> searchFiltered
+            NoteFilter.COMPLETED -> searchFiltered.filter { it.status == NoteStatus.COMPLETED }
+            NoteFilter.ACTIVE -> searchFiltered.filter { it.status == NoteStatus.ACTIVE }
+            NoteFilter.EXPIRED -> searchFiltered.filter { it.status == NoteStatus.EXPIRED }
+
+        }
+
+        NoteUiState(
+            data = finalFiltered,
+            isLoading = false,
+            error = null
+        )
+
+    }.catch { error ->
+        emit(NoteUiState(
+            data = emptyList(),
+            isLoading = false,
+            error = error.message ?: "Unknown error"
+        ))
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = NoteUiState(isLoading = true)
+    )
 
     fun updateSelectedFilter(filter: NoteFilter) {
-        selectedFilter = filter
+        _selectedFilter.value = filter
+    }
+
+    fun searchNotes(query: String) {
+        _searchQuery.value = query
     }
 
     fun navigateToDetail(noteId: Long? = null) {
@@ -79,29 +122,8 @@ class NoteViewModel(
         currentScreen = NoteScreen.LIST
     }
 
-    fun loadAllNotes() {
-        _uiState.value = NoteUiState(isLoading = true)
-        viewModelScope.launch {
-            allNotes.invoke()
-                .catch {
-                    _uiState.value = NoteUiState(
-                        error = it.message ?: "Unknown error",
-                        isLoading = false
-                    )
-                }.collect {
-                    if (it.isEmpty()) {
-                        _uiState.value = NoteUiState(
-                            error = "No notes found",
-                            isLoading = false
-                        )
-                    } else {
-                        _uiState.value = NoteUiState(
-                            data = it,
-                            isLoading = false
-                        )
-                    }
-                }
-        }
+    fun onQueryChange(query: String) {
+        currentQuery = query
     }
 
     fun createNote() {
@@ -201,29 +223,6 @@ class NoteViewModel(
                 .onFailure {
                     _detailUiState.value = NoteDetailUiState(
                         error = it.message ?: "Unknown error"
-                    )
-                }
-        }
-    }
-
-    fun searchNotes(query: String) {
-        if (query.isBlank()) {
-            loadAllNotes()
-            return
-        }
-
-        viewModelScope.launch {
-            getNotesByFilter.invoke(query)
-                .onSuccess {
-                    _uiState.value = NoteUiState(
-                        data = it,
-                        isLoading = false
-                    )
-                }
-                .onFailure {
-                    _uiState.value = NoteUiState(
-                        error = it.message ?: "Unknown error",
-                        isLoading = false
                     )
                 }
         }
