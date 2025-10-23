@@ -1,4 +1,4 @@
-package com.joao01sb.tasklys
+package com.joao01sb.tasklys.features.notes
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -10,12 +10,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.joao01sb.tasklys.App
 import com.joao01sb.tasklys.features.notes.presentation.datail.NoteDetailsScreen
 import com.joao01sb.tasklys.features.notes.presentation.note.NoteListScreen
 import com.joao01sb.tasklys.features.notes.presentation.NoteScreen
 import com.joao01sb.tasklys.features.notes.presentation.NoteViewModel
 import com.joao01sb.tasklys.features.notes.presentation.NoteViewModelFactory
-import com.joao01sb.tasklys.ui.theme.TasklysTheme
+import com.joao01sb.tasklys.core.theme.TasklysTheme
 import kotlinx.coroutines.flow.collectLatest
 
 class MainActivity : ComponentActivity() {

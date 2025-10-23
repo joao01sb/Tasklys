@@ -1,4 +1,4 @@
-package com.joao01sb.tasklys.ui.theme
+package com.joao01sb.tasklys.core.theme
 
 import androidx.compose.ui.graphics.Color
 

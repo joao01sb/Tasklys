@@ -25,7 +25,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.joao01sb.tasklys.core.domain.model.NoteStatus
-import com.joao01sb.tasklys.ui.theme.*
+import com.joao01sb.tasklys.core.theme.Background
+import com.joao01sb.tasklys.core.theme.Error
+import com.joao01sb.tasklys.core.theme.IconPrimary
+import com.joao01sb.tasklys.core.theme.OnBackground
+import com.joao01sb.tasklys.core.theme.OnPrimary
+import com.joao01sb.tasklys.core.theme.OnSurface
+import com.joao01sb.tasklys.core.theme.OnSurfaceVariant
+import com.joao01sb.tasklys.core.theme.Outline
+import com.joao01sb.tasklys.core.theme.Primary
+import com.joao01sb.tasklys.core.theme.Secondary
+import com.joao01sb.tasklys.core.theme.Success
+import com.joao01sb.tasklys.core.theme.Surface
+import com.joao01sb.tasklys.core.theme.SurfaceVariant
 import java.text.SimpleDateFormat
 import java.util.*
 
