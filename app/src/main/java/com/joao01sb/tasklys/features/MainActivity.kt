@@ -44,8 +44,7 @@ fun AppContainer() {
             deleteAllNotes = appContainer.deleteAllNotes,
             deleteNote = appContainer.deleteNote,
             getNoteById = appContainer.getNoteById,
-            updateNote = appContainer.updateNote,
-            getNotesByFilter = appContainer.getNotesByFilter
+            updateNote = appContainer.updateNote
         )
     )
 
