@@ -12,6 +12,8 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
@@ -354,8 +356,8 @@ fun NoteDetailsScreen(
     }
 
     if (detailUiState.showDatePicker) {
-        DatePickerDialog(
-            onDateSelected = { selectedDate ->
+        DateTimePickerDialog(
+            onDateTimeSelected = { selectedDate ->
                 onExpiryDateChange(selectedDate)
                 onDatePickerToggle(false)
             },
@@ -562,55 +564,172 @@ private fun ExpiryDateSection(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DatePickerDialog(
-    onDateSelected: (Long) -> Unit,
+private fun DateTimePickerDialog(
+    onDateTimeSelected: (Long) -> Unit,
     onDismiss: () -> Unit
 ) {
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = System.currentTimeMillis()
     )
 
-    DatePickerDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    datePickerState.selectedDateMillis?.let { date ->
-                        val calendar = Calendar.getInstance().apply {
-                            timeInMillis = date
-                            set(Calendar.HOUR_OF_DAY, 23)
-                            set(Calendar.MINUTE, 59)
-                            set(Calendar.SECOND, 59)
+    var showTimePicker by remember { mutableStateOf(false) }
+    var selectedHour by remember { mutableIntStateOf(23) }
+    var selectedMinute by remember { mutableIntStateOf(59) }
+
+    if (!showTimePicker) {
+        DatePickerDialog(
+            onDismissRequest = onDismiss,
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (datePickerState.selectedDateMillis != null) {
+                            showTimePicker = true
                         }
-                        onDateSelected(calendar.timeInMillis)
-                    }
-                },
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = Primary
-                )
-            ) {
-                Text("Confirm")
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Primary
+                    )
+                ) {
+                    Text("Next")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = OnSurfaceVariant
+                    )
+                ) {
+                    Text("Cancel")
+                }
             }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismiss,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = OnSurfaceVariant
+        ) {
+            DatePicker(
+                state = datePickerState,
+                colors = DatePickerDefaults.colors(
+                    containerColor = Surface,
+                    selectedDayContainerColor = Primary,
+                    todayContentColor = Primary,
+                    todayDateBorderColor = Primary
                 )
-            ) {
-                Text("Cancel")
-            }
-        }
-    ) {
-        DatePicker(
-            state = datePickerState,
-            colors = DatePickerDefaults.colors(
-                containerColor = Surface,
-                selectedDayContainerColor = Primary,
-                todayContentColor = Primary,
-                todayDateBorderColor = Primary
             )
+        }
+    } else {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { date ->
+                            val calendar = Calendar.getInstance().apply {
+                                timeInMillis = date
+                                set(Calendar.HOUR_OF_DAY, selectedHour)
+                                set(Calendar.MINUTE, selectedMinute)
+                                set(Calendar.SECOND, 0)
+                                set(Calendar.MILLISECOND, 0)
+                            }
+                            onDateTimeSelected(calendar.timeInMillis)
+                        }
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Primary
+                    )
+                ) {
+                    Text("Confirm")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showTimePicker = false },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = OnSurfaceVariant
+                    )
+                ) {
+                    Text("Back")
+                }
+            },
+            title = {
+                Text("Select Time")
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        NumberPicker(
+                            value = selectedHour,
+                            onValueChange = { selectedHour = it },
+                            range = 0..23,
+                            label = "Hour"
+                        )
+
+                        Text(
+                            text = ":",
+                            style = MaterialTheme.typography.headlineLarge,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+
+                        NumberPicker(
+                            value = selectedMinute,
+                            onValueChange = { selectedMinute = it },
+                            range = 0..59,
+                            label = "Minute"
+                        )
+                    }
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun NumberPicker(
+    value: Int,
+    onValueChange: (Int) -> Unit,
+    range: IntRange,
+    label: String
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        IconButton(
+            onClick = {
+                if (value < range.last) onValueChange(value + 1)
+                else onValueChange(range.first)
+            }
+        ) {
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowUp,
+                contentDescription = "Increase"
+            )
+        }
+
+        Text(
+            text = String.format("%02d", value),
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+
+        IconButton(
+            onClick = {
+                if (value > range.first) onValueChange(value - 1)
+                else onValueChange(range.last)
+            }
+        ) {
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowDown,
+                contentDescription = "Decrease"
+            )
+        }
+
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = OnSurfaceVariant
         )
     }
 }
