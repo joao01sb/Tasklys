@@ -14,6 +14,16 @@ interface NoteDao {
     @Query("SELECT * FROM notes ORDER BY createdAt DESC")
     fun getAllNotes(): Flow<List<NoteEntity>>
 
+    @Query("""
+        SELECT * FROM notes 
+        WHERE expiresAt > :currentTime 
+        AND status = 'ACTIVE'
+    """)
+    suspend fun getTasksToReschedule(currentTime: Long = System.currentTimeMillis()): List<NoteEntity>
+
+    @Query("SELECT id FROM notes")
+    suspend fun getAllTaskIds(): List<Long>
+
     @Query("SELECT * FROM notes WHERE id = :id")
     suspend fun getNoteById(id: Long): NoteEntity?
 
@@ -28,6 +38,9 @@ interface NoteDao {
 
     @Query("DELETE FROM notes")
     suspend fun deleteAll()
+
+    @Query("UPDATE notes SET status = 'COMPLETED' WHERE id = :taskId")
+    suspend fun markAsCompleted(taskId: Long)
 
     @Query("SELECT * FROM notes WHERE title LIKE '%' || :query || '%' OR content LIKE '%' || :query || '%'")
     suspend fun getNotesByFilter(query: String) : List<NoteEntity>?
