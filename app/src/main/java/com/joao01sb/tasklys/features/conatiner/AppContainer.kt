@@ -14,7 +14,7 @@ import com.joao01sb.tasklys.core.domain.usecase.UpdateNote
 class AppContainer(context: Context) {
     private val db = NoteDatabase.getDatabase(context)
     private val noteDao = db.noteDao()
-    private val repository = NoteRepositoryImp(noteDao)
+    private val repository = NoteRepositoryImp(noteDao, context)
 
     val addNote = AddNote(repository)
     val allNotes = AllNotes(repository)
