@@ -568,8 +568,18 @@ private fun DateTimePickerDialog(
     onDateTimeSelected: (Long) -> Unit,
     onDismiss: () -> Unit
 ) {
+    // Usar fuso horário do Brasil
+    val brTimeZone = TimeZone.getTimeZone("America/Sao_Paulo")
+
+    val calendar = Calendar.getInstance(brTimeZone).apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
+
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = System.currentTimeMillis()
+        initialSelectedDateMillis = calendar.timeInMillis
     )
 
     var showTimePicker by remember { mutableStateOf(false) }
@@ -620,15 +630,23 @@ private fun DateTimePickerDialog(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        datePickerState.selectedDateMillis?.let { date ->
-                            val calendar = Calendar.getInstance().apply {
-                                timeInMillis = date
+                        datePickerState.selectedDateMillis?.let { dateMillis ->
+                            // Ler a data em UTC
+                            val utcCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                                timeInMillis = dateMillis
+                            }
+
+                            // Criar calendar no fuso horário do Brasil com a data selecionada
+                            val brCalendar = Calendar.getInstance(brTimeZone).apply {
+                                set(Calendar.YEAR, utcCalendar.get(Calendar.YEAR))
+                                set(Calendar.MONTH, utcCalendar.get(Calendar.MONTH))
+                                set(Calendar.DAY_OF_MONTH, utcCalendar.get(Calendar.DAY_OF_MONTH))
                                 set(Calendar.HOUR_OF_DAY, selectedHour)
                                 set(Calendar.MINUTE, selectedMinute)
                                 set(Calendar.SECOND, 0)
                                 set(Calendar.MILLISECOND, 0)
                             }
-                            onDateTimeSelected(calendar.timeInMillis)
+                            onDateTimeSelected(brCalendar.timeInMillis)
                         }
                     },
                     colors = ButtonDefaults.textButtonColors(
