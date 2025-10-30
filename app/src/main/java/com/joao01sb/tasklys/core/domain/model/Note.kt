@@ -6,7 +6,9 @@ data class Note(
     val content: String = "",
     val createdAt: Long = System.currentTimeMillis(),
     val expiresAt: Long? = null,
-    val status: NoteStatus = NoteStatus.ACTIVE
+    val status: NoteStatus = NoteStatus.ACTIVE,
+    val recurrenceType: RecurrenceType = RecurrenceType.ONCE,
+    val recurrenceDays: Set<DayOfWeek> = emptySet()
 )
 
 enum class NoteStatus {

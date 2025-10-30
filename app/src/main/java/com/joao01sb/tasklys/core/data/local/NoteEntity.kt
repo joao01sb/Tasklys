@@ -11,6 +11,8 @@ data class NoteEntity(
     val content: String,
     val createdAt: Long,
     val expiresAt: Long?,
-    val status: String
+    val status: String,
+    val recurrenceType: String = "ONCE",
+    val recurrenceDays: String = ""
 )
 
