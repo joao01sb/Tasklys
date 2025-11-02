@@ -1,7 +1,10 @@
 package com.joao01sb.tasklys.features.notes.presentation.datail
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -24,9 +27,13 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.joao01sb.tasklys.core.domain.model.DayOfWeek
+import com.joao01sb.tasklys.core.domain.model.Note
 import com.joao01sb.tasklys.core.domain.model.NoteStatus
+import com.joao01sb.tasklys.core.domain.model.RecurrenceType
 import com.joao01sb.tasklys.core.theme.Background
 import com.joao01sb.tasklys.core.theme.Error
 import com.joao01sb.tasklys.core.theme.IconPrimary
@@ -55,7 +62,10 @@ fun NoteDetailsScreen(
     onSaveClick: () -> Unit,
     onDeleteClick: () -> Unit,
     onCompleteToggle: () -> Unit,
-    onEditToggle: () -> Unit
+    onEditToggle: () -> Unit,
+    onRecurringExpandToggle: () -> Unit,
+    onRecurrenceTypeChange: (RecurrenceType) -> Unit,
+    onDayToggle: (DayOfWeek) -> Unit
 ) {
 
     if (detailUiState.error != null) {
@@ -330,6 +340,17 @@ fun NoteDetailsScreen(
                 )
             }
 
+            if (detailUiState.isEditing || isNewNote) {
+                RecurringNotificationSection(
+                    isExpanded = detailUiState.isRecurringExpanded,
+                    recurrenceType = detailUiState.recurrenceType,
+                    selectedDays = detailUiState.selectedDays,
+                    onExpandToggle = onRecurringExpandToggle,
+                    onRecurrenceTypeChange = onRecurrenceTypeChange,
+                    onDayToggle = onDayToggle
+                )
+            }
+
             if (isNewNote) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
@@ -364,6 +385,40 @@ fun NoteDetailsScreen(
             onDismiss = { onDatePickerToggle(false) }
         )
     }
+}
+
+@Preview
+@Composable
+private fun NoteDetailsScreenPreview() {
+    NoteDetailsScreen(
+        detailUiState = NoteDetailUiState(
+            note = Note(
+                id = 1L,
+                title = "Sample Note",
+                content = "This is a sample note content.",
+                status = NoteStatus.ACTIVE,
+                createdAt = System.currentTimeMillis() - 3600000,
+                expiresAt = System.currentTimeMillis() + 86400000
+            ),
+            title = "Sample Note",
+            content = "This is a sample note content.",
+            expiryDate = System.currentTimeMillis() + 86400000,
+            isEditing = true,
+            isLoading = false
+        ),
+        onBackClick = {},
+        onTitleChange = {},
+        onContentChange = {},
+        onExpiryDateChange = {},
+        onDatePickerToggle = {},
+        onSaveClick = {},
+        onDeleteClick = {},
+        onCompleteToggle = {},
+        onEditToggle = {},
+        onRecurringExpandToggle = {},
+        onRecurrenceTypeChange = {},
+        onDayToggle = {}
+    )
 }
 
 @Composable
@@ -568,7 +623,7 @@ private fun DateTimePickerDialog(
     onDateTimeSelected: (Long) -> Unit,
     onDismiss: () -> Unit
 ) {
-    // Usar fuso horário do Brasil
+
     val brTimeZone = TimeZone.getTimeZone("America/Sao_Paulo")
 
     val calendar = Calendar.getInstance(brTimeZone).apply {
@@ -631,12 +686,10 @@ private fun DateTimePickerDialog(
                 TextButton(
                     onClick = {
                         datePickerState.selectedDateMillis?.let { dateMillis ->
-                            // Ler a data em UTC
                             val utcCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
                                 timeInMillis = dateMillis
                             }
 
-                            // Criar calendar no fuso horário do Brasil com a data selecionada
                             val brCalendar = Calendar.getInstance(brTimeZone).apply {
                                 set(Calendar.YEAR, utcCalendar.get(Calendar.YEAR))
                                 set(Calendar.MONTH, utcCalendar.get(Calendar.MONTH))
@@ -748,6 +801,209 @@ private fun NumberPicker(
             text = label,
             style = MaterialTheme.typography.bodySmall,
             color = OnSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun RecurringNotificationSection(
+    isExpanded: Boolean,
+    recurrenceType: RecurrenceType,
+    selectedDays: Set<DayOfWeek>,
+    onExpandToggle: () -> Unit,
+    onRecurrenceTypeChange: (RecurrenceType) -> Unit,
+    onDayToggle: (DayOfWeek) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = SurfaceVariant
+        ),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, Outline)
+    ) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onExpandToggle)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "zzz",
+                        fontSize = 24.sp
+                    )
+                    Column {
+                        Text(
+                            text = "Recurring Notification",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = OnSurface
+                        )
+                        Text(
+                            text = when (recurrenceType) {
+                                RecurrenceType.ONCE -> "One time only"
+                                RecurrenceType.DAILY -> "Every day"
+                                RecurrenceType.WEEKDAYS -> "Weekdays (Mon-Fri)"
+                                RecurrenceType.WEEKEND -> "Weekends"
+                                RecurrenceType.CUSTOM -> if (selectedDays.isNotEmpty())
+                                    "${selectedDays.size} days selected"
+                                else
+                                    "Not configured"
+                            },
+                            fontSize = 12.sp,
+                            color = OnSurfaceVariant
+                        )
+                    }
+                }
+
+                Icon(
+                    imageVector = if (isExpanded)
+                        Icons.Default.KeyboardArrowUp
+                    else
+                        Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                    tint = OnSurfaceVariant
+                )
+            }
+
+            AnimatedVisibility(visible = isExpanded) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(bottom = 4.dp),
+                        color = Outline
+                    )
+
+                    RecurrenceOption(
+                        selected = recurrenceType == RecurrenceType.ONCE,
+                        label = "One time only",
+                        onClick = { onRecurrenceTypeChange(RecurrenceType.ONCE) }
+                    )
+
+                    RecurrenceOption(
+                        selected = recurrenceType == RecurrenceType.DAILY,
+                        label = "Every day",
+                        onClick = { onRecurrenceTypeChange(RecurrenceType.DAILY) }
+                    )
+
+                    RecurrenceOption(
+                        selected = recurrenceType == RecurrenceType.WEEKDAYS,
+                        label = "Weekdays (Mon-Fri)",
+                        onClick = { onRecurrenceTypeChange(RecurrenceType.WEEKDAYS) }
+                    )
+
+                    RecurrenceOption(
+                        selected = recurrenceType == RecurrenceType.WEEKEND,
+                        label = "Weekends",
+                        onClick = { onRecurrenceTypeChange(RecurrenceType.WEEKEND) }
+                    )
+
+                    RecurrenceOption(
+                        selected = recurrenceType == RecurrenceType.CUSTOM,
+                        label = "Custom days",
+                        onClick = { onRecurrenceTypeChange(RecurrenceType.CUSTOM) }
+                    )
+
+                    AnimatedVisibility(visible = recurrenceType == RecurrenceType.CUSTOM) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 28.dp, top = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            DayOfWeek.entries.forEach { day ->
+                                DayButton(
+                                    day = day,
+                                    isSelected = selectedDays.contains(day),
+                                    onClick = { onDayToggle(day) }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecurrenceOption(
+    selected: Boolean,
+    label: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = selected,
+            onClick = onClick,
+            colors = RadioButtonDefaults.colors(
+                selectedColor = Primary,
+                unselectedColor = OnSurfaceVariant
+            )
+        )
+        Text(
+            text = label,
+            fontSize = 14.sp,
+            color = OnSurface
+        )
+    }
+}
+
+@Composable
+private fun DayButton(
+    day: DayOfWeek,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val dayLabel = when (day) {
+        DayOfWeek.SUNDAY -> "D"
+        DayOfWeek.MONDAY -> "S"
+        DayOfWeek.TUESDAY -> "T"
+        DayOfWeek.WEDNESDAY -> "Q"
+        DayOfWeek.THURSDAY -> "Q"
+        DayOfWeek.FRIDAY -> "S"
+        DayOfWeek.SATURDAY -> "S"
+    }
+
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .background(
+                color = if (isSelected) Primary else Surface,
+                shape = CircleShape
+            )
+            .border(
+                width = 1.dp,
+                color = if (isSelected) Primary else Outline,
+                shape = CircleShape
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = dayLabel,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = if (isSelected) OnPrimary else OnSurface
         )
     }
 }
