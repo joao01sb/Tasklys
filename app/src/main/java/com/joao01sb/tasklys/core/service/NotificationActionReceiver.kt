@@ -15,6 +15,7 @@ class NotificationActionReceiver : BroadcastReceiver() {
     companion object {
         const val ACTION_COMPLETE = "ACTION_COMPLETE_TASK"
         const val ACTION_SNOOZE = "ACTION_SNOOZE_TASK"
+        const val ACTION_DISMISS = "DISMISS_NOTIFICATION"
         private const val TAG = "NotificationAction"
     }
 
@@ -71,6 +72,16 @@ class NotificationActionReceiver : BroadcastReceiver() {
                 )
 
                 notificationManager.cancel(taskId.hashCode())
+            }
+
+            ACTION_DISMISS -> {
+                Log.d(TAG, "Notification dismissed: $taskId")
+                val notificationId = intent.getIntExtra("notificationId", -1)
+                if (notificationId != -1) {
+                    Log.d(TAG, "Notification dismissed: $notificationId")
+                    val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    notificationManager.cancel(notificationId)
+                }
             }
         }
     }
