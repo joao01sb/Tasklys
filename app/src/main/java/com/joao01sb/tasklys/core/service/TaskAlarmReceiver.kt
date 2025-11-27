@@ -14,6 +14,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.joao01sb.tasklys.App
 import com.joao01sb.tasklys.R
+import com.joao01sb.tasklys.core.data.mapper.toDomain
 import com.joao01sb.tasklys.features.notes.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -49,11 +50,35 @@ class TaskAlarmReceiver : BroadcastReceiver() {
 
         markTaskAsNotified(context, taskId)
 
+        val isRecurring = intent.getBooleanExtra(TaskScheduler.EXTRA_IS_RECURRING, false)
+
         showNotification(context, taskId, title ?: "", content ?: "")
+
+        if (isRecurring) {
+            rescheduleRecurringTask(context, taskId)
+        } else {
+            markTaskAsNotified(context, taskId)
+        }
 
         Log.d(TAG, "========== END ==========")
     }
-    
+
+    private fun rescheduleRecurringTask(context: Context, taskId: Long) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val databaseDao = (context.applicationContext as App).database.noteDao()
+                val task = databaseDao.getNoteById(taskId)
+                if (task != null) {
+                    val scheduler = TaskScheduler(context)
+                    scheduler.scheduleTaskNotification(task.toDomain())
+                    Log.d(TAG, "Rescheduled recurring task: $taskId")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error rescheduling recurring task", e)
+            }
+        }
+    }
+
     private fun markTaskAsNotified(context: Context, taskId: Long) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -109,6 +134,18 @@ class TaskAlarmReceiver : BroadcastReceiver() {
             snoozeIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+
+        val dismissIntent = Intent(context, NotificationActionReceiver::class.java).apply {
+            action = NotificationActionReceiver.ACTION_DISMISS
+            putExtra("notificationId", taskId.hashCode())
+        }
+
+        val dismissPendingIntent = PendingIntent.getBroadcast(
+            context,
+            taskId.hashCode() + 3,
+            dismissIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
         
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification_alarm)
@@ -122,6 +159,11 @@ class TaskAlarmReceiver : BroadcastReceiver() {
             .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM))
             .setVibrate(longArrayOf(0, 500, 200, 500))
             .setLights(Color.RED, 1000, 1000)
+            .addAction(
+                R.drawable.ic_launcher_foreground,
+                "OK",
+                dismissPendingIntent
+            )
             .addAction(
                 R.drawable.ic_check,
                 "Completed",
