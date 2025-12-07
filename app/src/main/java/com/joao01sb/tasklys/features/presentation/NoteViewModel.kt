@@ -5,19 +5,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.joao01sb.tasklys.core.domain.model.DayOfWeek
 import com.joao01sb.tasklys.core.domain.model.Note
 import com.joao01sb.tasklys.core.domain.model.NoteFilter
 import com.joao01sb.tasklys.core.domain.model.NoteStatus
+import com.joao01sb.tasklys.core.domain.model.RecurrenceType
 import com.joao01sb.tasklys.core.domain.usecase.AddNote
 import com.joao01sb.tasklys.core.domain.usecase.AllNotes
 import com.joao01sb.tasklys.core.domain.usecase.DeleteAllNotes
 import com.joao01sb.tasklys.core.domain.usecase.DeleteNote
 import com.joao01sb.tasklys.core.domain.usecase.GetNoteById
-import com.joao01sb.tasklys.core.domain.usecase.GetNotesByFilter
 import com.joao01sb.tasklys.core.domain.usecase.UpdateNote
 import com.joao01sb.tasklys.features.notes.presentation.datail.NoteDetailUiState
 import com.joao01sb.tasklys.features.notes.presentation.note.NoteUiState
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -130,7 +130,9 @@ class NoteViewModel(
         val note = Note(
             title = _detailUiState.value.title,
             content = _detailUiState.value.content,
-            expiresAt = _detailUiState.value.expiryDate
+            expiresAt = _detailUiState.value.expiryDate,
+            recurrenceType = _detailUiState.value.recurrenceType,
+            recurrenceDays = _detailUiState.value.selectedDays
         )
 
         viewModelScope.launch {
@@ -149,7 +151,9 @@ class NoteViewModel(
         val note = _detailUiState.value.note.copy(
             title = _detailUiState.value.title,
             content = _detailUiState.value.content,
-            expiresAt = _detailUiState.value.expiryDate
+            expiresAt = _detailUiState.value.expiryDate,
+            recurrenceType = _detailUiState.value.recurrenceType,
+            recurrenceDays = _detailUiState.value.selectedDays
         )
 
         viewModelScope.launch {
@@ -270,6 +274,43 @@ class NoteViewModel(
                     _uiEvent.emit(NoteUiEvent.Error(it.message ?: "Unknown error"))
                 }
         }
+    }
+
+    fun toggleRecurringExpanded() {
+        _detailUiState.value = _detailUiState.value.copy(
+            isRecurringExpanded = !_detailUiState.value.isRecurringExpanded
+        )
+    }
+
+    fun updateRecurrenceType(type: RecurrenceType) {
+        val days = when (type) {
+            RecurrenceType.DAILY -> DayOfWeek.entries.toSet()
+            RecurrenceType.WEEKDAYS -> setOf(
+                DayOfWeek.MONDAY,
+                DayOfWeek.TUESDAY,
+                DayOfWeek.WEDNESDAY,
+                DayOfWeek.THURSDAY,
+                DayOfWeek.FRIDAY
+            )
+            RecurrenceType.WEEKEND -> setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
+            RecurrenceType.ONCE -> emptySet()
+            RecurrenceType.CUSTOM -> _detailUiState.value.selectedDays
+        }
+
+        _detailUiState.value = _detailUiState.value.copy(
+            recurrenceType = type,
+            selectedDays = days
+        )
+    }
+
+    fun toggleDay(day: DayOfWeek) {
+        val current = _detailUiState.value.selectedDays
+        val updated = if (current.contains(day)) {
+            current - day
+        } else {
+            current + day
+        }
+        _detailUiState.value = _detailUiState.value.copy(selectedDays = updated)
     }
 
     fun updateTitle(title: String) {

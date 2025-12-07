@@ -167,6 +167,15 @@ fun AppContainer() {
                 },
                 onEditToggle = {
                     viewModel.toggleEditing(!detailUiState.isEditing)
+                },
+                onRecurringExpandToggle = {
+                    viewModel.toggleRecurringExpanded()
+                },
+                onRecurrenceTypeChange = { type ->
+                    viewModel.updateRecurrenceType(type)
+                },
+                onDayToggle = { day ->
+                    viewModel.toggleDay(day)
                 }
             )
         }
